@@ -20,9 +20,8 @@ import tkinter
 
 #ash
 from encryption import Encryption as ec
-from encryption import Cipher as cp
-from random import randint as rd
-import client_state_machine as csm
+import random as rd
+#end
 
 class Server:
     def __init__(self):
@@ -42,9 +41,8 @@ class Server:
         self.sonnet = indexer.PIndex("AllSonnets.txt")
 
         #ash - generate public nums
-        self.cp = cp()
-        self.base = rd(2,26)
-        self.mod = rd(1,26)
+        self.base = rd.choice([2, 6])
+        self.mod = 11
         self.ppns = {}
         #end
 
@@ -277,10 +275,10 @@ class Server:
 #                 #ash ---- num & ppn : FINAL project related
 # ==============================================================================
             elif msg["action"] == "base, mod":
-                mysend(from_sock, json.dumps({"base": self.base, "mod": self.mod}))
+                mysend(from_sock, json.dumps({"action": "base, mod", "base": self.base, "mod": self.mod}))
             
             elif msg["action"] == "server ppns":
-                print(self.ppns)
+                # print(self.ppns)
                 mysend(from_sock, json.dumps(
                     {"action": "server ppns", "results": self.ppns}))
             

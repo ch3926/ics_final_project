@@ -12,8 +12,8 @@ import tkinter
 #ash
 from encryption import Encryption as ec
 from encryption import Cipher as cp
-import random
-from random import randint as rd
+import random as rd
+# from random import randint as rd
 #end
 
 class ClientSM:
@@ -26,9 +26,12 @@ class ClientSM:
         self.s = s
 
         #ash
+        self.num = 0
+        self.ppn = 0
         self.peer_ppn = 0
         self.shift = 0
         self.cipher = cp()
+        self.server_ppns = {}
         #end
 
     #ash - get unique num for user
@@ -37,9 +40,11 @@ class ClientSM:
         temp = json.loads(myrecv(self.s))
         self.base = temp["base"]
         self.mod = temp["mod"]
-        self.my_ec = ec(self.mod, self.base)
-        self.num = self.my_ec.get_num()
-        self.ppn = self.my_ec.get_ppn()
+        my_ec = ec(self.mod, self.base)
+        self.num = my_ec.get_num()
+        self.ppn = my_ec.get_ppn()
+        print(self.me, self.num, self.ppn)
+        mysend(self.s, json.dumps({"action": "send ppn", "ppn": self.ppn}))
     #end
 
     def set_state(self, state):
@@ -85,14 +90,9 @@ class ClientSM:
 # ==============================================================================
         if self.state == S_LOGGEDIN:
             # todo: can't deal with multiple lines yet
-
-            #ash --- send your ppn, get other users' ppn
-            self.get_ec()
-            mysend(self.s, json.dumps({"action": "send ppn", "ppn": self.ppn}))
-            mysend(self.s, json.dumps({"action": "server ppns"}))
-            self.server_ppns = json.loads(myrecv(self.s))["results"]
-            #end
-
+            #ash
+            if self.previous_state == S_OFFLINE:
+                self.get_ec()
             if len(my_msg) > 0:
                 
                 # All the commands
@@ -117,16 +117,11 @@ class ClientSM:
                     peer = peer.strip()
                     if self.connect_to(peer) == True:
                         self.previous_state = self.state
+                        self.peer = peer
                         self.state = S_CHATTING
                         self.out_msg += 'Connect to ' + peer + '. Chat away!\n\n'
                         self.out_msg += '-----------------------------------\n'
-                        
-                        #ash
-                        self.peer_ppn = self.server_ppns[peer]
-                        print("peer_ppn: " + str(self.peer_ppn))
-                        self.shift = (self.peer_ppn ** self.num) % self.mod
-                        print("shift: " + str(self.shift))
-                        #end
+
                     else:
                         self.out_msg += 'Connection unsuccessful\n'
 
@@ -169,11 +164,8 @@ class ClientSM:
                     #ash
                     peer = peer_msg["from"]
                     self.peer = peer
-                    self.peer_ppn = self.server_ppns[peer]
-                    print("peer_ppn: " + str(self.peer_ppn))
-                    self.shift = (self.peer_ppn ** self.num) % self.mod
-                    print("shift: " + str(self.shift))
                     #end
+                    
                     self.previous_state = self.state
                     self.state = S_CHATTING
                     self.out_msg += 'Connect to ' + peer_msg['from'] + '. Chat away!\n\n'
@@ -186,6 +178,13 @@ class ClientSM:
 # This is event handling instate "S_CHATTING"
 # ==============================================================================
         elif self.state == S_CHATTING:
+            #ash --- get peer ppn, generate key
+            if self.previous_state == S_LOGGEDIN:
+                self.peer_ppn = self.server_ppns[self.peer]
+                print("peer_ppn: " + str(self.peer_ppn))
+                self.shift = (self.peer_ppn ** self.num) % self.mod
+                print("shift: " + str(self.shift))
+            #end
             if len(my_msg) > 0:     # my stuff going out (and hiding commands)
                 #ash --- encrypt message
                 ec_msg = self.cipher.caesar_encrypt(my_msg, self.shift)
@@ -209,22 +208,24 @@ class ClientSM:
                 # ----------your code here------#
                 # print(f"{type(peer_msg)} -> {peer_msg=}")
                 peer_msg = json.loads(peer_msg)
+                print(peer_msg)
                 if peer_msg['action'] == 'connect':
                     self.previous_state = self.state
                     self.state = S_CHATTING
                     self.out_msg += 'Connect to ' + peer_msg['from'] + '. Chat away!\n\n'
                     self.out_msg += '-----------------------------------\n'
-                elif peer_msg['action'] == 'disconnect':
-                    self.disconnect()
-                    self.previous_state = self.state
-                    self.state = S_LOGGEDIN
-                    self.peer = ''
-                else:
+                if peer_msg['action'] == 'exchange':
                     #ash --- decrypt message
                     dc_msg = self.cipher.caesar_decrypt(peer_msg["message"], self.shift)
                     self.out_msg += "[" + peer_msg['from'] + "] " + dc_msg
                     # self.out_msg += peer_msg['from'] + peer_msg['message']
                     #end
+                elif peer_msg['action'] == 'disconnect':
+                    self.disconnect()
+                    self.previous_state = self.state
+                    self.state = S_LOGGEDIN
+                    self.peer = ''
+                
 
 
                 # ----------end of your code----#

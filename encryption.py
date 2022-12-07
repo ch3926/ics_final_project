@@ -43,7 +43,7 @@ class Cipher:
 
 class Encryption:
     def __init__(self, m, base):
-        self.private = self.generate_num()
+        self.private = rd(1,26)
         self.m = m
         self.public_base = base
         self.ppn = (self.public_base ** self.private) % self.m
@@ -63,9 +63,6 @@ class Encryption:
     
     def get_num(self):
         return self.private
-
-    def generate_num(self):
-        return rd(1,26)
 
 
 if __name__ == "__main__":

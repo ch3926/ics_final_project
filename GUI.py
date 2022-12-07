@@ -108,6 +108,11 @@ class GUI:
                          font="Helvetica 14 bold",
                          command=lambda: self.goAhead(self.entryName.get(), self.entryPass.get()))
         
+        #ash --- press enter to continue w/ login
+        self.entryName.bind('<Return>', lambda event: self.goAhead(self.entryName.get(), self.entryPass.get()))
+        self.entryPass.bind('<Return>', lambda event: self.goAhead(self.entryName.get(), self.entryPass.get()))
+        #end
+        
         # create a sign up button
         self.signUp = Button(self.login,
                          text="SIGN UP",
@@ -248,6 +253,10 @@ class GUI:
                             relx=0.011)
 
         self.entryMsg.focus()
+
+        #ash --- press enter to continue
+        self.entryMsg.bind('<Return>', lambda event: self.sendButton(self.entryMsg.get()))
+        #end
 
         # create a Send Button
         self.buttonMsg = Button(self.labelBottom,
