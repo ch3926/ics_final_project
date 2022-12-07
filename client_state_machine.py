@@ -9,6 +9,12 @@ from chat_utils import *
 import json
 import tkinter
 
+#ash
+from encryption import Encryption as ec
+from encryption import Cipher as cp
+import random
+from random import randint as rd
+#end
 
 class ClientSM:
     def __init__(self, s):
@@ -19,6 +25,22 @@ class ClientSM:
         self.out_msg = ''
         self.s = s
 
+        #ash
+        self.peer_ppn = 0
+        self.shift = 0
+        self.cipher = cp()
+        #end
+
+    #ash - get unique num for user
+    def get_ec(self):
+        mysend(self.s, json.dumps({"action": "base, mod"}))
+        temp = json.loads(myrecv(self.s))
+        self.base = temp["base"]
+        self.mod = temp["mod"]
+        self.my_ec = ec(self.mod, self.base)
+        self.num = self.my_ec.get_num()
+        self.ppn = self.my_ec.get_ppn()
+    #end
 
     def set_state(self, state):
         self.state = state
@@ -63,6 +85,14 @@ class ClientSM:
 # ==============================================================================
         if self.state == S_LOGGEDIN:
             # todo: can't deal with multiple lines yet
+
+            #ash --- send your ppn, get other users' ppn
+            self.get_ec()
+            mysend(self.s, json.dumps({"action": "send ppn", "ppn": self.ppn}))
+            mysend(self.s, json.dumps({"action": "server ppns"}))
+            self.server_ppns = json.loads(myrecv(self.s))["results"]
+            #end
+
             if len(my_msg) > 0:
                 
                 # All the commands
@@ -90,7 +120,13 @@ class ClientSM:
                         self.state = S_CHATTING
                         self.out_msg += 'Connect to ' + peer + '. Chat away!\n\n'
                         self.out_msg += '-----------------------------------\n'
-
+                        
+                        #ash
+                        self.peer_ppn = self.server_ppns[peer]
+                        print("peer_ppn: " + str(self.peer_ppn))
+                        self.shift = (self.peer_ppn ** self.num) % self.mod
+                        print("shift: " + str(self.shift))
+                        #end
                     else:
                         self.out_msg += 'Connection unsuccessful\n'
 
@@ -130,6 +166,14 @@ class ClientSM:
 
                     # ----------your code here------(good)#
                     # print(peer_msg)
+                    #ash
+                    peer = peer_msg["from"]
+                    self.peer = peer
+                    self.peer_ppn = self.server_ppns[peer]
+                    print("peer_ppn: " + str(self.peer_ppn))
+                    self.shift = (self.peer_ppn ** self.num) % self.mod
+                    print("shift: " + str(self.shift))
+                    #end
                     self.previous_state = self.state
                     self.state = S_CHATTING
                     self.out_msg += 'Connect to ' + peer_msg['from'] + '. Chat away!\n\n'
@@ -143,8 +187,14 @@ class ClientSM:
 # ==============================================================================
         elif self.state == S_CHATTING:
             if len(my_msg) > 0:     # my stuff going out (and hiding commands)
+                #ash --- encrypt message
+                ec_msg = self.cipher.caesar_encrypt(my_msg, self.shift)
+                # print(ec_msg)
+                # mysend(self.s, json.dumps(
+                #    {"action": "exchange", "from": "[" + self.me + "] ", "message": my_msg}))
                 mysend(self.s, json.dumps(
-                    {"action": "exchange", "from": "[" + self.me + "] ", "message": my_msg}))
+                    {"action": "exchange", "from": "[" + self.me + "] ", "message": ec_msg}))
+                #end
                 
                 # LEAVE THE CHAT
                 if my_msg == 'bye':
@@ -170,7 +220,11 @@ class ClientSM:
                     self.state = S_LOGGEDIN
                     self.peer = ''
                 else:
-                    self.out_msg += peer_msg['from'] + peer_msg['message']
+                    #ash --- decrypt message
+                    dc_msg = self.cipher.caesar_decrypt(peer_msg["message"], self.shift)
+                    self.out_msg += "[" + peer_msg['from'] + "] " + dc_msg
+                    # self.out_msg += peer_msg['from'] + peer_msg['message']
+                    #end
 
 
                 # ----------end of your code----#

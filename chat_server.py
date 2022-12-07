@@ -18,6 +18,11 @@ import chat_group as grp
 import ast
 import tkinter
 
+#ash
+from encryption import Encryption as ec
+from encryption import Cipher as cp
+from random import randint as rd
+import client_state_machine as csm
 
 class Server:
     def __init__(self):
@@ -35,6 +40,13 @@ class Server:
         self.indices = {} # {person1:indexer object, person2:indexer object,...}
         # sonnet
         self.sonnet = indexer.PIndex("AllSonnets.txt")
+
+        #ash - generate public nums
+        self.cp = cp()
+        self.base = rd(2,26)
+        self.mod = rd(1,26)
+        self.ppns = {}
+        #end
 
     def new_client(self, sock):
         # add to all sockets and to new clients
@@ -147,7 +159,12 @@ class Server:
                 # IMPLEMENTATION (TEST THIS INDEXING)
                 # ---- start your code ---- #
                 "--> needs to use self.indices search to work"
-                self.indices[from_name].add_msg_and_index(time.strftime('%d.%m.%y,%H:%M', time.localtime()) + msg['from'] + msg['message'])
+                
+                #ash
+                ctime = time.strftime('%d.%m.%y,%H:%M', time.localtime())
+                msg_to_index = "[" + from_name + "] " + str(ctime) + " " + msg["message"]
+                # self.indices[from_name].add_msg_and_index(time.strftime('%d.%m.%y,%H:%M', time.localtime()) + msg['from'] + msg['message'])
+                #end
 
                 # ---- end of your code --- #
 
@@ -159,12 +176,21 @@ class Server:
                     # ---- start your code ---- #
                     # print(f"{msg=}")
 
+                    #ash
+                    g_index = self.indices[g]
+                    g_index.add_msg_and_index(msg_to_index)
+                    #end
 
                     # mysend(
                     #     to_sock, f"{msg['from']}{msg['message']}")
                     # print(f"{msg=}")
-                    mysend(
-                        to_sock, json.dumps(msg))
+
+                    #ash
+                    #mysend(
+                    #    to_sock, json.dumps(msg))
+                    mysend(to_sock, json.dumps(
+                        {"action": "exchange", "from": from_name, "message": msg["message"]}))
+                    #end
 
                     # ---- end of your code --- #
 
@@ -247,7 +273,22 @@ class Server:
                 mysend(from_sock, json.dumps(
                     {"action": "search", "results": search_rslt}))
 
-
+# ==============================================================================
+#                 #ash ---- num & ppn : FINAL project related
+# ==============================================================================
+            elif msg["action"] == "base, mod":
+                mysend(from_sock, json.dumps({"base": self.base, "mod": self.mod}))
+            
+            elif msg["action"] == "server ppns":
+                print(self.ppns)
+                mysend(from_sock, json.dumps(
+                    {"action": "server ppns", "results": self.ppns}))
+            
+            elif msg["action"] == "send ppn":
+                name = self.logged_sock2name[from_sock]
+                print(name, msg["ppn"])
+                self.ppns[name] = msg["ppn"]
+            #end
 # ==============================================================================
 #                 the "from" guy really, really has had enough
 # ==============================================================================
