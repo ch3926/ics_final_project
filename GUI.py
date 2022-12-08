@@ -292,7 +292,23 @@ class GUI:
 
         self.textCons.config(state=DISABLED)
 
+        #messing around, gonna create a search box
+        self.searchBar = Entry(self.labelHead, bg="#2C3E50",
+                            fg="#EAECEE", font="Helvetica 13", width=20)
+        self.searchBar.place(relx=0.8, relheight=1, relwidth=0.2)
+        self.searchBar.bind('<Return>', lambda event: self.searchButton(self.searchBar.get()))
+
     # function to basically start the thread for sending messages
+    def searchButton(self, term):
+        self.my_msg = term
+        # print(msg)
+        self.searchBar.delete(0, END)
+        self.textCons.config(state=NORMAL)
+        self.send(json.dumps({"action": "search", "target": term}))
+        msg = json.loads(self.recv())["results"]
+        self.textCons.insert(END, msg + "\n")
+        self.textCons.config(state=DISABLED)
+        self.textCons.see(END)
 
     def sendButton(self, msg):
         # self.textCons.config(state=DISABLED)
