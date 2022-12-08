@@ -24,22 +24,29 @@ class ClientSM:
         self.me = ''
         self.out_msg = ''
         self.s = s
-        self.counter = 1
 
         #ash
+        self.counter = 1
         self.num = rd.randint(1,26)
-        print(self.me, self.num)
+        print(self.num)
         self.peer_ppn = 0
         self.shift = 0
         self.cipher = cp()
         self.server_ppns = {}
+        self.first_run = True
         #end
 
-    def get_bm(self):
+    #ash
+    def get_ppn(self):
         mysend(self.s, json.dumps({"action": "base, mod"}))
-        response = json.loads(myrecv(self.s))
-        return response
+        bm = json.loads(myrecv(self.s))
 
+        self.base = bm["base"]
+        self.mod = bm["mod"]
+        self.ppn = (self.base ** self.num) % self.mod
+        
+        return self.ppn
+    #end
     def set_state(self, state):
         self.state = state
 
@@ -73,6 +80,17 @@ class ClientSM:
         mysend(self.s, msg)
         self.out_msg += 'You are disconnected from ' + self.peer + '\n'
         self.peer = ''
+    
+    def get_shift(self):
+        try:
+            mysend(self.s, json.dumps({"action": "server ppns"}))
+            self.server_ppns = json.loads(myrecv(self.s))["results"]
+            self.peer_ppn = self.server_ppns[self.peer]
+            print("peer_ppn: " + str(self.peer_ppn))
+            self.shift = (self.peer_ppn ** self.num) % self.mod
+            print("shift: " + str(self.shift))
+        except:
+            pass
 
     def proc(self, my_msg: str, peer_msg):
         print("counter", self.counter, end=' | ')
@@ -89,13 +107,9 @@ class ClientSM:
         if self.state == S_LOGGEDIN:
             # todo: can't deal with multiple lines yet
             #ash
-            
-            if self.previous_state == S_OFFLINE:
-                bm = self.get_bm()
-                self.base = bm["base"]
-                self.mod = bm["mod"]
-                self.ppn = (self.base ** self.num) % self.mod
-                mysend(self.s, json.dumps({"action": "send ppn", "ppn": self.ppn}))
+            #end
+            # if self.previous_state == S_OFFLINE:
+                
             #end
             if len(my_msg) > 0:
                 
@@ -125,7 +139,7 @@ class ClientSM:
                         self.state = S_CHATTING
                         self.out_msg += 'Connect to ' + peer + '. Chat away!\n\n'
                         self.out_msg += '-----------------------------------\n'
-
+                        self.get_shift()
                     else:
                         self.out_msg += 'Connection unsuccessful\n'
 
@@ -175,6 +189,7 @@ class ClientSM:
                     self.out_msg += 'Connect to ' + peer_msg['from'] + '. Chat away!\n\n'
                     self.out_msg += '-----------------------------------\n'
 
+                    self.get_shift()
                     # ----------end of your code----#
 
 # ==============================================================================
@@ -183,11 +198,7 @@ class ClientSM:
 # ==============================================================================
         elif self.state == S_CHATTING:
             #ash --- get peer ppn, generate key
-            '''if self.previous_state == S_LOGGEDIN:
-                self.peer_ppn = self.server_ppns[self.peer]
-                print("peer_ppn: " + str(self.peer_ppn))
-                self.shift = (self.peer_ppn ** self.num) % self.mod
-                print("shift: " + str(self.shift))'''
+            
             #end
             if len(my_msg) > 0:     # my stuff going out (and hiding commands)
                 #ash --- encrypt message

@@ -278,7 +278,7 @@ class Server:
                 mysend(from_sock, json.dumps({"action": "base, mod", "base": self.base, "mod": self.mod}))
             
             elif msg["action"] == "server ppns":
-                # print(self.ppns)
+                print(self.ppns)
                 mysend(from_sock, json.dumps(
                     {"action": "server ppns", "results": self.ppns}))
             
@@ -286,6 +286,7 @@ class Server:
                 name = self.logged_sock2name[from_sock]
                 print(name, msg["ppn"])
                 self.ppns[name] = msg["ppn"]
+                print(self.ppns)
                 # mysend(from_sock, json.dumps({"status": "success"}))
             #end
 # ==============================================================================
