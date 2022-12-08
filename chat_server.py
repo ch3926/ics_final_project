@@ -286,6 +286,7 @@ class Server:
                 name = self.logged_sock2name[from_sock]
                 print(name, msg["ppn"])
                 self.ppns[name] = msg["ppn"]
+                # mysend(from_sock, json.dumps({"status": "success"}))
             #end
 # ==============================================================================
 #                 the "from" guy really, really has had enough

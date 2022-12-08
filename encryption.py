@@ -42,9 +42,9 @@ class Cipher:
 
 
 class Encryption:
-    def __init__(self, m, base):
-        self.private = rd(1,26)
-        self.m = m
+    def __init__(self, num, base, mod):
+        self.private = num
+        self.m = mod
         self.public_base = base
         self.ppn = (self.public_base ** self.private) % self.m
         self.peer_ppn = 0
@@ -68,17 +68,17 @@ class Encryption:
 if __name__ == "__main__":
     # num_1 = rd(1,26)
     # num_2 = rd(1,26)
-    m = rd(1, 26)
-    base = 26
+    m = 11
+    base = 2
 
     # print("arnold num: " + str(num_1))
     # print("eve num: " + str(num_2))
     print("m: " + str(m))
     print("base: " + str(base))
     
-    arnold = Encryption(m, base)
+    arnold = Encryption(2, m, base)
     arnold_ppn = arnold.get_ppn()
-    eve = Encryption(m, base)
+    eve = Encryption(3, m, base)
     eve_ppn = eve.get_ppn()
 
     print("arnold num: " + str(arnold.get_num()))
@@ -103,7 +103,7 @@ if __name__ == "__main__":
     decoded = c.caesar_decrypt(encoded, shift)
     print("Origin:", m)
     print("Encoded:", encoded)
-    print("Decoded", decoded)
+    print("Decoded:", decoded)
 
     # I love ICS!!!
     m = "I love ICS!!!"
@@ -113,6 +113,6 @@ if __name__ == "__main__":
     decoded = c.caesar_decrypt(encoded, shift)
     print("Origin:", m)
     print("Encoded:", encoded)
-    print("Decoded", decoded)
+    print("Decoded:", decoded)
 
 # python package for public private keys

@@ -10,7 +10,7 @@ import json
 import tkinter
 
 #ash
-from encryption import Encryption as ec
+# from encryption import Encryption as ec
 from encryption import Cipher as cp
 import random as rd
 # from random import randint as rd
@@ -24,28 +24,21 @@ class ClientSM:
         self.me = ''
         self.out_msg = ''
         self.s = s
+        self.counter = 1
 
         #ash
-        self.num = 0
-        self.ppn = 0
+        self.num = rd.randint(1,26)
+        print(self.me, self.num)
         self.peer_ppn = 0
         self.shift = 0
         self.cipher = cp()
         self.server_ppns = {}
         #end
 
-    #ash - get unique num for user
-    def get_ec(self):
+    def get_bm(self):
         mysend(self.s, json.dumps({"action": "base, mod"}))
-        temp = json.loads(myrecv(self.s))
-        self.base = temp["base"]
-        self.mod = temp["mod"]
-        my_ec = ec(self.mod, self.base)
-        self.num = my_ec.get_num()
-        self.ppn = my_ec.get_ppn()
-        print(self.me, self.num, self.ppn)
-        mysend(self.s, json.dumps({"action": "send ppn", "ppn": self.ppn}))
-    #end
+        response = json.loads(myrecv(self.s))
+        return response
 
     def set_state(self, state):
         self.state = state
@@ -82,6 +75,11 @@ class ClientSM:
         self.peer = ''
 
     def proc(self, my_msg: str, peer_msg):
+        print("counter", self.counter, end=' | ')
+        print_state(self.get_state())
+        print("state", self.get_state())
+        self.counter += 1
+        
         self.out_msg = ''
 # ==============================================================================
 # Once logged in, do a few things: get peer listing, connect, search
@@ -91,8 +89,14 @@ class ClientSM:
         if self.state == S_LOGGEDIN:
             # todo: can't deal with multiple lines yet
             #ash
+            
             if self.previous_state == S_OFFLINE:
-                self.get_ec()
+                bm = self.get_bm()
+                self.base = bm["base"]
+                self.mod = bm["mod"]
+                self.ppn = (self.base ** self.num) % self.mod
+                mysend(self.s, json.dumps({"action": "send ppn", "ppn": self.ppn}))
+            #end
             if len(my_msg) > 0:
                 
                 # All the commands
@@ -165,7 +169,7 @@ class ClientSM:
                     peer = peer_msg["from"]
                     self.peer = peer
                     #end
-                    
+
                     self.previous_state = self.state
                     self.state = S_CHATTING
                     self.out_msg += 'Connect to ' + peer_msg['from'] + '. Chat away!\n\n'
@@ -179,11 +183,11 @@ class ClientSM:
 # ==============================================================================
         elif self.state == S_CHATTING:
             #ash --- get peer ppn, generate key
-            if self.previous_state == S_LOGGEDIN:
+            '''if self.previous_state == S_LOGGEDIN:
                 self.peer_ppn = self.server_ppns[self.peer]
                 print("peer_ppn: " + str(self.peer_ppn))
                 self.shift = (self.peer_ppn ** self.num) % self.mod
-                print("shift: " + str(self.shift))
+                print("shift: " + str(self.shift))'''
             #end
             if len(my_msg) > 0:     # my stuff going out (and hiding commands)
                 #ash --- encrypt message
