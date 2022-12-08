@@ -28,15 +28,13 @@ class ClientSM:
         #ash
         self.counter = 1
         self.num = rd.randint(1,26)
-        print(self.num)
+        # print(self.num)
         self.peer_ppn = 0
         self.shift = 0
         self.cipher = cp()
         self.server_ppns = {}
-        self.first_run = True
         #end
 
-    #ash
     def get_ppn(self):
         mysend(self.s, json.dumps({"action": "base, mod"}))
         bm = json.loads(myrecv(self.s))
@@ -46,7 +44,7 @@ class ClientSM:
         self.ppn = (self.base ** self.num) % self.mod
         
         return self.ppn
-    #end
+
     def set_state(self, state):
         self.state = state
 
@@ -86,16 +84,16 @@ class ClientSM:
             mysend(self.s, json.dumps({"action": "server ppns"}))
             self.server_ppns = json.loads(myrecv(self.s))["results"]
             self.peer_ppn = self.server_ppns[self.peer]
-            print("peer_ppn: " + str(self.peer_ppn))
+            # print("peer_ppn: " + str(self.peer_ppn))
             self.shift = (self.peer_ppn ** self.num) % self.mod
-            print("shift: " + str(self.shift))
+            # print("shift: " + str(self.shift))
         except:
             pass
 
     def proc(self, my_msg: str, peer_msg):
-        print("counter", self.counter, end=' | ')
-        print_state(self.get_state())
-        print("state", self.get_state())
+        #print("counter", self.counter, end=' | ')
+        #print_state(self.get_state())
+        #print("state", self.get_state())
         self.counter += 1
         
         self.out_msg = ''
@@ -106,11 +104,7 @@ class ClientSM:
 # ==============================================================================
         if self.state == S_LOGGEDIN:
             # todo: can't deal with multiple lines yet
-            #ash
-            #end
-            # if self.previous_state == S_OFFLINE:
-                
-            #end
+            
             if len(my_msg) > 0:
                 
                 # All the commands
@@ -179,16 +173,14 @@ class ClientSM:
 
                     # ----------your code here------(good)#
                     # print(peer_msg)
-                    #ash
                     peer = peer_msg["from"]
                     self.peer = peer
-                    #end
-
                     self.previous_state = self.state
                     self.state = S_CHATTING
                     self.out_msg += 'Connect to ' + peer_msg['from'] + '. Chat away!\n\n'
                     self.out_msg += '-----------------------------------\n'
 
+                    # get key to shift messages
                     self.get_shift()
                     # ----------end of your code----#
 
@@ -197,18 +189,12 @@ class ClientSM:
 # This is event handling instate "S_CHATTING"
 # ==============================================================================
         elif self.state == S_CHATTING:
-            #ash --- get peer ppn, generate key
             
-            #end
             if len(my_msg) > 0:     # my stuff going out (and hiding commands)
-                #ash --- encrypt message
+                # encrypt message
                 ec_msg = self.cipher.caesar_encrypt(my_msg, self.shift)
-                # print(ec_msg)
-                # mysend(self.s, json.dumps(
-                #    {"action": "exchange", "from": "[" + self.me + "] ", "message": my_msg}))
                 mysend(self.s, json.dumps(
                     {"action": "exchange", "from": "[" + self.me + "] ", "message": ec_msg}))
-                #end
                 
                 # LEAVE THE CHAT
                 if my_msg == 'bye':
@@ -230,11 +216,10 @@ class ClientSM:
                     self.out_msg += 'Connect to ' + peer_msg['from'] + '. Chat away!\n\n'
                     self.out_msg += '-----------------------------------\n'
                 if peer_msg['action'] == 'exchange':
-                    #ash --- decrypt message
+                    # decrypt message
                     dc_msg = self.cipher.caesar_decrypt(peer_msg["message"], self.shift)
                     self.out_msg += "[" + peer_msg['from'] + "] " + dc_msg
-                    # self.out_msg += peer_msg['from'] + peer_msg['message']
-                    #end
+                
                 elif peer_msg['action'] == 'disconnect':
                     self.disconnect()
                     self.previous_state = self.state

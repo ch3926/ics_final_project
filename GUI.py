@@ -146,10 +146,11 @@ class GUI:
                 self.login.destroy()
                 self.sm.set_state(S_LOGGEDIN)
                 self.sm.set_myname(name)
-                #ash
+                
+                # generate ppn upon login
                 ppn = self.sm.get_ppn()
                 self.send(json.dumps({"action": "send ppn", "ppn": ppn}))
-                #end
+
                 self.layout(name)
                 self.textCons.config(state=NORMAL)
                 # self.textCons.insert(END, "hello" +"\n\n")
