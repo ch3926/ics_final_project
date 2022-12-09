@@ -161,6 +161,7 @@ class Server:
                 #ash
                 ctime = time.strftime('%d.%m.%y,%H:%M', time.localtime())
                 msg_to_index = "[" + from_name + "] " + str(ctime) + " " + msg["message"]
+                self.indices[from_name].add_msg_and_index(msg_to_index)
                 # self.indices[from_name].add_msg_and_index(time.strftime('%d.%m.%y,%H:%M', time.localtime()) + msg['from'] + msg['message'])
                 #end
 
