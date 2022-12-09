@@ -299,6 +299,7 @@ class GUI:
         self.searchBar.bind('<Return>', lambda event: self.searchButton(self.searchBar.get()))
 
     # function to basically start the thread for sending messages
+    # error -- for some reason you can type "who" in the search box and it works
     def searchButton(self, term):
         self.my_msg = term
         # print(msg)
