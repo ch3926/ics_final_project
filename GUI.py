@@ -148,8 +148,9 @@ class GUI:
                 self.sm.set_myname(name)
                 
                 # generate ppn upon login
-                ppn = self.sm.get_ppn()
-                self.send(json.dumps({"action": "send ppn", "ppn": ppn}))
+                # get n, e
+                n, e = self.sm.get_n_e()
+                self.send(json.dumps({"action": "send n,e", "n": n, "e": e}))
 
                 self.layout(name)
                 self.textCons.config(state=NORMAL)

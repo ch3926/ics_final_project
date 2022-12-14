@@ -275,19 +275,27 @@ class Server:
 # ==============================================================================
 #                 #ash ---- num & ppn : FINAL project related
 # ==============================================================================
-            elif msg["action"] == "base, mod":
-                mysend(from_sock, json.dumps({"action": "base, mod", "base": self.base, "mod": self.mod}))
+            # elif msg["action"] == "base, mod":
+            #     mysend(from_sock, json.dumps({"action": "base, mod", "base": self.base, "mod": self.mod}))
             
             elif msg["action"] == "server ppns":
-                print(self.ppns)
+                # print(self.ppns)
                 mysend(from_sock, json.dumps(
                     {"action": "server ppns", "results": self.ppns}))
             
-            elif msg["action"] == "send ppn":
+            elif msg["action"] == "send n,e":
                 name = self.logged_sock2name[from_sock]
-                print(name, msg["ppn"])
-                self.ppns[name] = msg["ppn"]
+                # print(name, msg["ppn"])
+                # print(name, msg)
+                # print(name, msg['n'], msg['e'])
+                self.ppns[name] = {"n": msg["n"], "e": msg["e"]}
                 print(self.ppns)
+            
+            elif msg["action"] == "send c":
+                name = self.logged_sock2name[from_sock]
+                # print(name, msg["ppn"])
+                self.ppns[name]["c"] = msg["c"]
+                # print(self.ppns)
                 # mysend(from_sock, json.dumps({"status": "success"}))
             #end
 # ==============================================================================
