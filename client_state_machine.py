@@ -28,7 +28,6 @@ class ClientSM:
         self.s = s
 
         #ash
-        self.counter = 1
         self.RSA = RSA()
         self.d = self.RSA.get_d()
         self.user_type = ""
@@ -91,10 +90,6 @@ class ClientSM:
             print("something went wrong")
 
     def proc(self, my_msg: str, peer_msg):
-        #print("counter", self.counter, end=' | ')
-        #print_state(self.get_state())
-        #print_state(self.previous_state)
-        self.counter += 1
         self.out_msg = ''
 # ==============================================================================
 # Once logged in, do a few things: get peer listing, connect, search
@@ -256,7 +251,6 @@ class ClientSM:
 # ==============================================================================
         else:
             self.out_msg += 'How did you wind up here??\n'
-            #print_state(self.state)
 
         return self.out_msg
 
