@@ -146,15 +146,9 @@ class GUI:
                 self.login.destroy()
                 self.sm.set_state(S_LOGGEDIN)
                 self.sm.set_myname(name)
-                
-                # generate ppn upon login
-                # get n, e
-                n, e = self.sm.get_n_e()
-                self.send(json.dumps({"action": "send n,e", "n": n, "e": e}))
 
                 self.layout(name)
                 self.textCons.config(state=NORMAL)
-                # self.textCons.insert(END, "hello" +"\n\n")
                 self.textCons.insert(END, menu + "\n\n")
                 self.textCons.config(state=DISABLED)
                 self.textCons.see(END)
